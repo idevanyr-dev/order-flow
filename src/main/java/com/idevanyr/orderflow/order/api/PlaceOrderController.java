@@ -1,0 +1,32 @@
+package com.idevanyr.orderflow.order.api;
+
+import com.idevanyr.orderflow.order.application.PlaceOrderUseCase;
+import com.idevanyr.orderflow.order.application.PlacedOrderResult;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/orders")
+class PlaceOrderController {
+
+    private final PlaceOrderUseCase placeOrderUseCase;
+
+    PlaceOrderController(PlaceOrderUseCase placeOrderUseCase) {
+        this.placeOrderUseCase = placeOrderUseCase;
+    }
+
+    @PostMapping
+    ResponseEntity<?> place(@RequestBody PlaceOrderRequest request) {
+        var result = placeOrderUseCase.execute(request.toCommand());
+
+        return switch (result) {
+            case PlacedOrderResult.Success success ->
+                    ResponseEntity.status(201).body(new PlaceOrderResponse(success.orderId()));
+            case PlacedOrderResult.ValidationError error ->
+                    ResponseEntity.badRequest().body(new ErrorResponse(error.errors()));
+        };
+    }
+}
