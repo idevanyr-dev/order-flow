@@ -27,7 +27,7 @@ class PlaceOrderController {
             case PlacedOrderResult.Success(var orderId) ->
                     ResponseEntity.status(201).body(new PlaceOrderResponse(orderId));
             case PlacedOrderResult.ValidationError(var errors) ->
-                    ResponseEntity.badRequest().body(new ErrorResponse(errors));
+                    throw new BadRequestApiException(errors);
         };
     }
 }

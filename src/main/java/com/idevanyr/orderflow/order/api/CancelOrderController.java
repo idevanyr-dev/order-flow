@@ -9,8 +9,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/orders")
 class CancelOrderController {
@@ -27,9 +25,8 @@ class CancelOrderController {
 
         return switch (result) {
             case CancelOrderResult.Success _ -> ResponseEntity.noContent().build();
-            case CancelOrderResult.NotFound _ -> ResponseEntity.notFound().build();
-            case CancelOrderResult.Rejected(var reason) ->
-                    ResponseEntity.status(422).body(Map.of("reason", reason));
+            case CancelOrderResult.NotFound _ -> throw new NotFoundApiException("order not found");
+            case CancelOrderResult.Rejected(var reason) -> throw new RejectedApiException(reason);
         };
     }
 }

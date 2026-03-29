@@ -1,5 +1,6 @@
 package com.idevanyr.orderflow.order.api;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -10,6 +11,11 @@ import java.util.List;
 
 @RestControllerAdvice(basePackageClasses = PlaceOrderController.class)
 class OrderApiValidationHandler {
+
+    @ExceptionHandler(BadRequestApiException.class)
+    ResponseEntity<ErrorResponse> handleBadRequestApiException(BadRequestApiException exception) {
+        return ResponseEntity.badRequest().body(new ErrorResponse(exception.errors()));
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(MethodArgumentNotValidException exception) {
@@ -28,5 +34,20 @@ class OrderApiValidationHandler {
                 .toList();
 
         return ResponseEntity.badRequest().body(new ErrorResponse(errors));
+    }
+
+    @ExceptionHandler(NotFoundApiException.class)
+    ResponseEntity<Void> handleNotFoundApiException(NotFoundApiException exception) {
+        return ResponseEntity.notFound().build();
+    }
+
+    @ExceptionHandler(RejectedApiException.class)
+    ResponseEntity<ReasonResponse> handleRejectedApiException(RejectedApiException exception) {
+        return ResponseEntity.status(422).body(new ReasonResponse(exception.getMessage()));
+    }
+
+    @ExceptionHandler(UpstreamFailureApiException.class)
+    ResponseEntity<ReasonResponse> handleUpstreamFailureApiException(UpstreamFailureApiException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new ReasonResponse(exception.getMessage()));
     }
 }
