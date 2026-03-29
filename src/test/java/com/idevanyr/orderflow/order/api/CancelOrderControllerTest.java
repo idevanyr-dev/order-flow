@@ -4,8 +4,8 @@ import com.idevanyr.orderflow.order.application.CancelOrderResult;
 import com.idevanyr.orderflow.order.application.CancelOrderUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -20,7 +20,7 @@ class CancelOrderControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private CancelOrderUseCase cancelOrderUseCase;
 
     @Test
@@ -47,7 +47,7 @@ class CancelOrderControllerTest {
                 .thenReturn(new CancelOrderResult.Rejected("paid order cannot be cancelled"));
 
         mockMvc.perform(post("/orders/1/cancellation"))
-                .andExpect(status().isUnprocessableEntity())
+                .andExpect(status().is(422))
                 .andExpect(jsonPath("$.reason").value("paid order cannot be cancelled"));
     }
 }
