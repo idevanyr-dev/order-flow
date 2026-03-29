@@ -24,7 +24,8 @@ class PayOrderUseCaseImplTest {
     void shouldReturnNotFoundWhenOrderDoesNotExist() {
         var repository = mock(OrderRepository.class);
         var paymentGateway = mock(PaymentGateway.class);
-        var useCase = new PayOrderUseCaseImpl(repository, paymentGateway);
+        var notificationGateway = mock(NotificationGateway.class);
+        var useCase = new PayOrderUseCaseImpl(repository, paymentGateway, notificationGateway);
 
         when(repository.findById(1L)).thenReturn(Optional.empty());
 
@@ -33,13 +34,15 @@ class PayOrderUseCaseImplTest {
         assertInstanceOf(PayOrderResult.NotFound.class, result);
         verify(repository, never()).save(any());
         verify(paymentGateway, never()).authorize(any());
+        verify(notificationGateway, never()).notify(any());
     }
 
     @Test
     void shouldPayConfirmedOrder() {
         var repository = mock(OrderRepository.class);
         var paymentGateway = mock(PaymentGateway.class);
-        var useCase = new PayOrderUseCaseImpl(repository, paymentGateway);
+        var notificationGateway = mock(NotificationGateway.class);
+        var useCase = new PayOrderUseCaseImpl(repository, paymentGateway, notificationGateway);
 
         var order = new Order(
                 1L,
@@ -62,13 +65,20 @@ class PayOrderUseCaseImplTest {
                         && request.amount().compareTo(new BigDecimal("99.80")) == 0
         ));
         verify(repository).save(any(Order.class));
+        verify(notificationGateway).notify(argThat(notification ->
+                notification.type() == OrderNotification.Type.ORDER_PAID
+                        && notification.orderId().equals(1L)
+                        && notification.customerId().equals("C-100")
+                        && notification.totalAmount().compareTo(new BigDecimal("99.80")) == 0
+        ));
     }
 
     @Test
     void shouldRejectCancelledOrder() {
         var repository = mock(OrderRepository.class);
         var paymentGateway = mock(PaymentGateway.class);
-        var useCase = new PayOrderUseCaseImpl(repository, paymentGateway);
+        var notificationGateway = mock(NotificationGateway.class);
+        var useCase = new PayOrderUseCaseImpl(repository, paymentGateway, notificationGateway);
 
         var order = new Order(
                 1L,
@@ -84,13 +94,15 @@ class PayOrderUseCaseImplTest {
         assertInstanceOf(PayOrderResult.Rejected.class, result);
         verify(repository, never()).save(any());
         verify(paymentGateway, never()).authorize(any());
+        verify(notificationGateway, never()).notify(any());
     }
 
     @Test
     void shouldReturnRejectedWhenGatewayRejectsAuthorization() {
         var repository = mock(OrderRepository.class);
         var paymentGateway = mock(PaymentGateway.class);
-        var useCase = new PayOrderUseCaseImpl(repository, paymentGateway);
+        var notificationGateway = mock(NotificationGateway.class);
+        var useCase = new PayOrderUseCaseImpl(repository, paymentGateway, notificationGateway);
 
         var order = new Order(
                 1L,
@@ -107,13 +119,15 @@ class PayOrderUseCaseImplTest {
 
         assertInstanceOf(PayOrderResult.Rejected.class, result);
         verify(repository, never()).save(any());
+        verify(notificationGateway, never()).notify(any());
     }
 
     @Test
     void shouldReturnFailedWhenGatewayIsUnavailable() {
         var repository = mock(OrderRepository.class);
         var paymentGateway = mock(PaymentGateway.class);
-        var useCase = new PayOrderUseCaseImpl(repository, paymentGateway);
+        var notificationGateway = mock(NotificationGateway.class);
+        var useCase = new PayOrderUseCaseImpl(repository, paymentGateway, notificationGateway);
 
         var order = new Order(
                 1L,
@@ -130,5 +144,6 @@ class PayOrderUseCaseImplTest {
 
         assertInstanceOf(PayOrderResult.Failed.class, result);
         verify(repository, never()).save(any());
+        verify(notificationGateway, never()).notify(any());
     }
 }

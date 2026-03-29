@@ -13,10 +13,16 @@ class PayOrderUseCaseImpl implements PayOrderUseCase {
 
     private final OrderRepository orderRepository;
     private final PaymentGateway paymentGateway;
+    private final NotificationGateway notificationGateway;
 
-    PayOrderUseCaseImpl(OrderRepository orderRepository, PaymentGateway paymentGateway) {
+    PayOrderUseCaseImpl(
+            OrderRepository orderRepository,
+            PaymentGateway paymentGateway,
+            NotificationGateway notificationGateway
+    ) {
         this.orderRepository = orderRepository;
         this.paymentGateway = paymentGateway;
+        this.notificationGateway = notificationGateway;
     }
 
     @Override
@@ -49,7 +55,13 @@ class PayOrderUseCaseImpl implements PayOrderUseCase {
                     yield new PayOrderResult.Failed(reason);
                 }
 
-                orderRepository.save(paidOrder);
+                var savedOrder = orderRepository.save(paidOrder);
+                notificationGateway.notify(new OrderNotification(
+                        OrderNotification.Type.ORDER_PAID,
+                        savedOrder.id(),
+                        savedOrder.customerId(),
+                        savedOrder.total()
+                ));
                 log.info("Order paid successfully for orderId={}", command.orderId());
                 yield new PayOrderResult.Success();
             }

@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -21,7 +22,8 @@ class ConfirmOrderUseCaseImplTest {
     @Test
     void shouldReturnNotFoundWhenOrderDoesNotExist() {
         var repository = mock(OrderRepository.class);
-        var useCase = new ConfirmOrderUseCaseImpl(repository);
+        var notificationGateway = mock(NotificationGateway.class);
+        var useCase = new ConfirmOrderUseCaseImpl(repository, notificationGateway);
 
         when(repository.findById(1L)).thenReturn(java.util.Optional.empty());
 
@@ -29,12 +31,14 @@ class ConfirmOrderUseCaseImplTest {
 
         assertInstanceOf(ConfirmOrderResult.NotFound.class, result);
         verify(repository, never()).save(any());
+        verify(notificationGateway, never()).notify(any());
     }
 
     @Test
     void shouldConfirmOrderWhenItIsValid() {
         var repository = mock(OrderRepository.class);
-        var useCase = new ConfirmOrderUseCaseImpl(repository);
+        var notificationGateway = mock(NotificationGateway.class);
+        var useCase = new ConfirmOrderUseCaseImpl(repository, notificationGateway);
 
         var order = new Order(
                 1L,
@@ -50,12 +54,17 @@ class ConfirmOrderUseCaseImplTest {
 
         assertInstanceOf(ConfirmOrderResult.Success.class, result);
         verify(repository).save(any(Order.class));
+        verify(notificationGateway).notify(argThat(notification ->
+                notification.type() == OrderNotification.Type.ORDER_CONFIRMED
+                        && notification.orderId().equals(1L)
+        ));
     }
 
     @Test
     void shouldRejectCancelledOrder() {
         var repository = mock(OrderRepository.class);
-        var useCase = new ConfirmOrderUseCaseImpl(repository);
+        var notificationGateway = mock(NotificationGateway.class);
+        var useCase = new ConfirmOrderUseCaseImpl(repository, notificationGateway);
 
         var order = new Order(
                 1L,
@@ -70,5 +79,6 @@ class ConfirmOrderUseCaseImplTest {
 
         assertInstanceOf(ConfirmOrderResult.Rejected.class, result);
         verify(repository, never()).save(any());
+        verify(notificationGateway, never()).notify(any());
     }
 }

@@ -11,6 +11,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -23,20 +24,23 @@ class PlaceOrderUseCaseImplTest {
     void shouldReturnValidationErrorWhenCommandIsInvalid() {
         var policy = new OrderPolicy();
         var repository = mock(OrderRepository.class);
-        var useCase = new PlaceOrderUseCaseImpl(policy, repository);
+        var notificationGateway = mock(NotificationGateway.class);
+        var useCase = new PlaceOrderUseCaseImpl(policy, repository, notificationGateway);
         var command = new PlaceOrderCommand("C-100", List.of());
 
         var result = useCase.execute(command);
 
         assertInstanceOf(PlacedOrderResult.ValidationError.class, result);
         verify(repository, never()).save(any());
+        verify(notificationGateway, never()).notify(any());
     }
 
     @Test
     void shouldPersistOrderAndReturnSuccessWhenCommandIsValid() {
         var policy = new OrderPolicy();
         var repository = mock(OrderRepository.class);
-        var useCase = new PlaceOrderUseCaseImpl(policy, repository);
+        var notificationGateway = mock(NotificationGateway.class);
+        var useCase = new PlaceOrderUseCaseImpl(policy, repository, notificationGateway);
 
         var command = new PlaceOrderCommand(
                 "C-100",
@@ -53,5 +57,11 @@ class PlaceOrderUseCaseImplTest {
         var success = assertInstanceOf(PlacedOrderResult.Success.class, result);
         assertEquals(1L, success.orderId());
         verify(repository).save(any(Order.class));
+        verify(notificationGateway).notify(argThat(notification ->
+                notification.type() == OrderNotification.Type.ORDER_PLACED
+                        && notification.orderId().equals(1L)
+                        && notification.customerId().equals("C-100")
+                        && notification.totalAmount().compareTo(new BigDecimal("99.80")) == 0
+        ));
     }
 }

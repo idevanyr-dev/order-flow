@@ -14,10 +14,12 @@ class PlaceOrderUseCaseImpl implements PlaceOrderUseCase {
 
     private final OrderPolicy orderPolicy;
     private final OrderRepository orderRepository;
+    private final NotificationGateway notificationGateway;
 
-    PlaceOrderUseCaseImpl(OrderPolicy orderPolicy, OrderRepository orderRepository) {
+    PlaceOrderUseCaseImpl(OrderPolicy orderPolicy, OrderRepository orderRepository, NotificationGateway notificationGateway) {
         this.orderPolicy = orderPolicy;
         this.orderRepository = orderRepository;
+        this.notificationGateway = notificationGateway;
     }
 
     @Override
@@ -32,6 +34,12 @@ class PlaceOrderUseCaseImpl implements PlaceOrderUseCase {
 
         var order = Order.place(command);
         var savedOrder = orderRepository.save(order);
+        notificationGateway.notify(new OrderNotification(
+                OrderNotification.Type.ORDER_PLACED,
+                savedOrder.id(),
+                savedOrder.customerId(),
+                savedOrder.total()
+        ));
         log.info("Order placed successfully with orderId={}", savedOrder.id());
 
         return new PlacedOrderResult.Success(savedOrder.id());

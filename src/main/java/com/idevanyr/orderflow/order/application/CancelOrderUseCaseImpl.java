@@ -12,9 +12,11 @@ class CancelOrderUseCaseImpl implements CancelOrderUseCase {
     private static final Logger log = LoggerFactory.getLogger(CancelOrderUseCaseImpl.class);
 
     private final OrderRepository orderRepository;
+    private final NotificationGateway notificationGateway;
 
-    CancelOrderUseCaseImpl(OrderRepository orderRepository) {
+    CancelOrderUseCaseImpl(OrderRepository orderRepository, NotificationGateway notificationGateway) {
         this.orderRepository = orderRepository;
+        this.notificationGateway = notificationGateway;
     }
 
     @Override
@@ -31,7 +33,13 @@ class CancelOrderUseCaseImpl implements CancelOrderUseCase {
 
         return switch (cancellation) {
             case OrderCancellation.Success(var cancelledOrder) -> {
-                orderRepository.save(cancelledOrder);
+                var savedOrder = orderRepository.save(cancelledOrder);
+                notificationGateway.notify(new OrderNotification(
+                        OrderNotification.Type.ORDER_CANCELLED,
+                        savedOrder.id(),
+                        savedOrder.customerId(),
+                        savedOrder.total()
+                ));
                 log.info("Order cancelled successfully for orderId={}", command.orderId());
                 yield new CancelOrderResult.Success();
             }

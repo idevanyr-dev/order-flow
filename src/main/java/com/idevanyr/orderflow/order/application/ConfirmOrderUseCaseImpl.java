@@ -12,9 +12,11 @@ class ConfirmOrderUseCaseImpl implements ConfirmOrderUseCase {
     private static final Logger log = LoggerFactory.getLogger(ConfirmOrderUseCaseImpl.class);
 
     private final OrderRepository orderRepository;
+    private final NotificationGateway notificationGateway;
 
-    ConfirmOrderUseCaseImpl(OrderRepository orderRepository) {
+    ConfirmOrderUseCaseImpl(OrderRepository orderRepository, NotificationGateway notificationGateway) {
         this.orderRepository = orderRepository;
+        this.notificationGateway = notificationGateway;
     }
 
     @Override
@@ -31,14 +33,19 @@ class ConfirmOrderUseCaseImpl implements ConfirmOrderUseCase {
 
         return switch (confirmation) {
             case OrderConfirmation.Success(var confirmedOrder) -> {
-                orderRepository.save(confirmedOrder);
+                var savedOrder = orderRepository.save(confirmedOrder);
+                notificationGateway.notify(new OrderNotification(
+                        OrderNotification.Type.ORDER_CONFIRMED,
+                        savedOrder.id(),
+                        savedOrder.customerId(),
+                        savedOrder.total()
+                ));
                 log.info("Order confirmed successfully for orderId={}", command.orderId());
                 yield new ConfirmOrderResult.Success();
             }
             case OrderConfirmation.Rejected(var reason) -> {
                 log.warn("Order confirmation rejected for orderId={}: {}", command.orderId(), reason);
-                yield
-                    new ConfirmOrderResult.Rejected(reason);
+                yield new ConfirmOrderResult.Rejected(reason);
             }
         };
     }
