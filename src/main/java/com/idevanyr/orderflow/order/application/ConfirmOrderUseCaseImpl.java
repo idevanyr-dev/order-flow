@@ -24,12 +24,12 @@ class ConfirmOrderUseCaseImpl implements ConfirmOrderUseCase {
         var confirmation = order.confirm();
 
         return switch (confirmation) {
-            case OrderConfirmation.Success success -> {
-                orderRepository.save(success.order());
+            case OrderConfirmation.Success(var confirmedOrder) -> {
+                orderRepository.save(confirmedOrder);
                 yield new ConfirmOrderResult.Success();
             }
-            case OrderConfirmation.Rejected rejected ->
-                    new ConfirmOrderResult.Rejected(rejected.reason());
+            case OrderConfirmation.Rejected(var reason) ->
+                    new ConfirmOrderResult.Rejected(reason);
         };
     }
 }

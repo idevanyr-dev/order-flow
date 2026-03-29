@@ -6,7 +6,6 @@ import com.idevanyr.orderflow.order.application.OrderItemView;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository

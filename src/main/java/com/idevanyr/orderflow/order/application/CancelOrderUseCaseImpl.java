@@ -24,12 +24,12 @@ class CancelOrderUseCaseImpl implements CancelOrderUseCase {
         var cancellation = order.cancel();
 
         return switch (cancellation) {
-            case OrderCancellation.Success success -> {
-                orderRepository.save(success.order());
+            case OrderCancellation.Success(var cancelledOrder) -> {
+                orderRepository.save(cancelledOrder);
                 yield new CancelOrderResult.Success();
             }
-            case OrderCancellation.Rejected rejected ->
-                    new CancelOrderResult.Rejected(rejected.reason());
+            case OrderCancellation.Rejected(var reason) ->
+                    new CancelOrderResult.Rejected(reason);
         };
     }
 }
