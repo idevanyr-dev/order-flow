@@ -21,3 +21,19 @@ order:
     provider:
       base-url: http://localhost:8081
       api-key: local-dev-key
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
