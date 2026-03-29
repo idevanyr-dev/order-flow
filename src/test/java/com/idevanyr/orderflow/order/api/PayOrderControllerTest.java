@@ -50,4 +50,14 @@ class PayOrderControllerTest {
                 .andExpect(status().is(422))
                 .andExpect(jsonPath("$.reason").value("cancelled order cannot be paid"));
     }
+
+    @Test
+    void shouldReturnBadGatewayWhenPaymentGatewayFails() throws Exception {
+        when(payOrderUseCase.execute(any()))
+                .thenReturn(new PayOrderResult.Failed("payment service is unavailable"));
+
+        mockMvc.perform(post("/orders/1/payment"))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.reason").value("payment service is unavailable"));
+    }
 }

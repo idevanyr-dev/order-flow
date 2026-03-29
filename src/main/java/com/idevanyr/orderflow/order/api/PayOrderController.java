@@ -30,6 +30,8 @@ class PayOrderController {
             case PayOrderResult.NotFound _ -> ResponseEntity.notFound().build();
             case PayOrderResult.Rejected(var reason) ->
                     ResponseEntity.status(422).body(Map.of("reason", reason));
+            case PayOrderResult.Failed(var reason) ->
+                    ResponseEntity.status(502).body(Map.of("reason", reason));
         };
     }
 }
