@@ -135,7 +135,3 @@ Cada capítulo deve gerar:
 - modelar os primeiros casos de uso
 - estruturar persistência com Spring Data JDBC
 - introduzir testes de domínio antes de expandir endpoints
-
-## Documentação
-
-- [Capítulo 1 — Direção arquitetural do projeto](docs/capitulo-01-direcao-arquitetural.md)
