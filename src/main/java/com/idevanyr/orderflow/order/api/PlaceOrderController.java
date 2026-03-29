@@ -19,14 +19,14 @@ class PlaceOrderController {
     }
 
     @PostMapping
-    ResponseEntity<?> place(@RequestBody PlaceOrderRequest request) {
+    ResponseEntity<Object> place(@RequestBody PlaceOrderRequest request) {
         var result = placeOrderUseCase.execute(request.toCommand());
 
         return switch (result) {
-            case PlacedOrderResult.Success success ->
-                    ResponseEntity.status(201).body(new PlaceOrderResponse(success.orderId()));
-            case PlacedOrderResult.ValidationError error ->
-                    ResponseEntity.badRequest().body(new ErrorResponse(error.errors()));
+            case PlacedOrderResult.Success(var orderId) ->
+                    ResponseEntity.status(201).body(new PlaceOrderResponse(orderId));
+            case PlacedOrderResult.ValidationError(var errors) ->
+                    ResponseEntity.badRequest().body(new ErrorResponse(errors));
         };
     }
 }

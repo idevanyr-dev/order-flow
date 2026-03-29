@@ -22,14 +22,14 @@ class ConfirmOrderController {
     }
 
     @PostMapping("/{orderId}/confirmation")
-    ResponseEntity<?> confirm(@PathVariable Long orderId) {
+    ResponseEntity<Object> confirm(@PathVariable Long orderId) {
         var result = confirmOrderUseCase.execute(new ConfirmOrderCommand(orderId));
 
         return switch (result) {
-            case ConfirmOrderResult.Success ignored -> ResponseEntity.noContent().build();
-            case ConfirmOrderResult.NotFound ignored -> ResponseEntity.notFound().build();
-            case ConfirmOrderResult.Rejected rejected ->
-                    ResponseEntity.unprocessableEntity().body(Map.of("reason", rejected.reason()));
+            case ConfirmOrderResult.Success _ -> ResponseEntity.noContent().build();
+            case ConfirmOrderResult.NotFound _ -> ResponseEntity.notFound().build();
+            case ConfirmOrderResult.Rejected(var reason) ->
+                    ResponseEntity.status(422).body(Map.of("reason", reason));
         };
     }
 }

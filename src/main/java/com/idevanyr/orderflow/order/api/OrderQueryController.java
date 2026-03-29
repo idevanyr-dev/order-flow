@@ -1,6 +1,7 @@
 package com.idevanyr.orderflow.order.api;
 
 import com.idevanyr.orderflow.order.application.FindOrderDetailsQuery;
+import com.idevanyr.orderflow.order.application.OrderDetailsView;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,9 +19,9 @@ class OrderQueryController {
     }
 
     @GetMapping("/{orderId}")
-    ResponseEntity<?> findById(@PathVariable Long orderId) {
+    ResponseEntity<OrderDetailsView> findById(@PathVariable Long orderId) {
         return findOrderDetailsQuery.execute(orderId)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

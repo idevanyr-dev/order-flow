@@ -22,14 +22,14 @@ class CancelOrderController {
     }
 
     @PostMapping("/{orderId}/cancellation")
-    ResponseEntity<?> cancel(@PathVariable Long orderId) {
+    ResponseEntity<Object> cancel(@PathVariable Long orderId) {
         var result = cancelOrderUseCase.execute(new CancelOrderCommand(orderId));
 
         return switch (result) {
-            case CancelOrderResult.Success ignored -> ResponseEntity.noContent().build();
-            case CancelOrderResult.NotFound ignored -> ResponseEntity.notFound().build();
-            case CancelOrderResult.Rejected rejected ->
-                    ResponseEntity.unprocessableEntity().body(Map.of("reason", rejected.reason()));
+            case CancelOrderResult.Success _ -> ResponseEntity.noContent().build();
+            case CancelOrderResult.NotFound _ -> ResponseEntity.notFound().build();
+            case CancelOrderResult.Rejected(var reason) ->
+                    ResponseEntity.status(422).body(Map.of("reason", reason));
         };
     }
 }
