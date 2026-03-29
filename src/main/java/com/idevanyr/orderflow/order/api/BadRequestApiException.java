@@ -2,12 +2,12 @@ package com.idevanyr.orderflow.order.api;
 
 import java.util.List;
 
-class BadRequestApiException extends OrderApiException {
+final class BadRequestApiException extends OrderApiException {
 
     private final List<String> errors;
 
     BadRequestApiException(List<String> errors) {
-        super(400, "request validation failed");
+        super("request validation failed");
         this.errors = List.copyOf(errors);
     }
 
