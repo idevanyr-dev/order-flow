@@ -16,3 +16,9 @@ spring:
   jackson:
     serialization:
       indent-output: true
+
+order:
+  payment:
+    provider:
+      base-url: http://localhost:8081
+      api-key: local-dev-key
