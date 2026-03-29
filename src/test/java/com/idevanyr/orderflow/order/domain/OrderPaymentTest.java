@@ -8,25 +8,10 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-class OrderConfirmationTest {
+class OrderPaymentTest {
 
     @Test
-    void shouldConfirmDraftOrderWithItems() {
-        var order = new Order(
-                1L,
-                "C-100",
-                List.of(new OrderItem("P-10", 2, new BigDecimal("49.90"))),
-                OrderStatus.DRAFT
-        );
-
-        var result = order.confirm();
-
-        var success = assertInstanceOf(OrderConfirmation.Success.class, result);
-        assertEquals(OrderStatus.CONFIRMED, success.order().status());
-    }
-
-    @Test
-    void shouldRejectAlreadyConfirmedOrder() {
+    void shouldPayConfirmedOrder() {
         var order = new Order(
                 1L,
                 "C-100",
@@ -34,10 +19,25 @@ class OrderConfirmationTest {
                 OrderStatus.CONFIRMED
         );
 
-        var result = order.confirm();
+        var result = order.pay();
 
-        var rejected = assertInstanceOf(OrderConfirmation.Rejected.class, result);
-        assertEquals("order is already confirmed", rejected.reason());
+        var success = assertInstanceOf(OrderPayment.Success.class, result);
+        assertEquals(OrderStatus.PAID, success.order().status());
+    }
+
+    @Test
+    void shouldRejectDraftOrder() {
+        var order = new Order(
+                1L,
+                "C-100",
+                List.of(new OrderItem("P-10", 2, new BigDecimal("49.90"))),
+                OrderStatus.DRAFT
+        );
+
+        var result = order.pay();
+
+        var rejected = assertInstanceOf(OrderPayment.Rejected.class, result);
+        assertEquals("order must be confirmed before payment", rejected.reason());
     }
 
     @Test
@@ -49,14 +49,14 @@ class OrderConfirmationTest {
                 OrderStatus.CANCELLED
         );
 
-        var result = order.confirm();
+        var result = order.pay();
 
-        var rejected = assertInstanceOf(OrderConfirmation.Rejected.class, result);
-        assertEquals("cancelled order cannot be confirmed", rejected.reason());
+        var rejected = assertInstanceOf(OrderPayment.Rejected.class, result);
+        assertEquals("cancelled order cannot be paid", rejected.reason());
     }
 
     @Test
-    void shouldRejectPaidOrder() {
+    void shouldRejectAlreadyPaidOrder() {
         var order = new Order(
                 1L,
                 "C-100",
@@ -64,9 +64,9 @@ class OrderConfirmationTest {
                 OrderStatus.PAID
         );
 
-        var result = order.confirm();
+        var result = order.pay();
 
-        var rejected = assertInstanceOf(OrderConfirmation.Rejected.class, result);
-        assertEquals("paid order does not require confirmation", rejected.reason());
+        var rejected = assertInstanceOf(OrderPayment.Rejected.class, result);
+        assertEquals("order is already paid", rejected.reason());
     }
 }

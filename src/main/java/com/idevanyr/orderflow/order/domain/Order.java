@@ -46,6 +46,10 @@ public final class Order {
             return new OrderConfirmation.Rejected("order is already confirmed");
         }
 
+        if (status == OrderStatus.PAID) {
+            return new OrderConfirmation.Rejected("paid order does not require confirmation");
+        }
+
         return new OrderConfirmation.Success(
                 new Order(id, customerId, items, OrderStatus.CONFIRMED)
         );
@@ -62,6 +66,24 @@ public final class Order {
 
         return new OrderCancellation.Success(
                 new Order(id, customerId, items, OrderStatus.CANCELLED)
+        );
+    }
+
+    public OrderPayment pay() {
+        if (status == OrderStatus.CANCELLED) {
+            return new OrderPayment.Rejected("cancelled order cannot be paid");
+        }
+
+        if (status == OrderStatus.DRAFT) {
+            return new OrderPayment.Rejected("order must be confirmed before payment");
+        }
+
+        if (status == OrderStatus.PAID) {
+            return new OrderPayment.Rejected("order is already paid");
+        }
+
+        return new OrderPayment.Success(
+                new Order(id, customerId, items, OrderStatus.PAID)
         );
     }
 
