@@ -1,7 +1,10 @@
 package com.idevanyr.orderflow.order.infrastructure.jdbc;
 
+import org.springframework.data.relational.core.mapping.Table;
+
 import java.math.BigDecimal;
 
+@Table("order_items")
 public class OrderItemData {
 
     private String productCode;
