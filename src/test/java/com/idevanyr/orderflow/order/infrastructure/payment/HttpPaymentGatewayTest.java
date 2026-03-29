@@ -65,7 +65,7 @@ class HttpPaymentGatewayTest {
 
         when(client.authorize(any()))
                 .thenThrow(HttpClientErrorException.create(
-                        HttpStatus.valueOf(422),
+                        HttpStatus.UNPROCESSABLE_CONTENT,
                         "Rejected",
                         HttpHeaders.EMPTY,
                         new byte[0],

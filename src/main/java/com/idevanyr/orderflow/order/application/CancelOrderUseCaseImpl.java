@@ -1,15 +1,21 @@
 package com.idevanyr.orderflow.order.application;
 
+import com.idevanyr.orderflow.order.domain.Order;
 import com.idevanyr.orderflow.order.domain.OrderCancellation;
 import com.idevanyr.orderflow.order.domain.OrderRepository;
+
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
 @Service
 class CancelOrderUseCaseImpl implements CancelOrderUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(CancelOrderUseCaseImpl.class);
+    private static final String CONFLICT_REASON = "order was changed by another request";
 
     private final OrderRepository orderRepository;
     private final NotificationGateway notificationGateway;
@@ -33,12 +39,15 @@ class CancelOrderUseCaseImpl implements CancelOrderUseCase {
 
         return switch (cancellation) {
             case OrderCancellation.Success(var cancelledOrder) -> {
-                var savedOrder = orderRepository.save(cancelledOrder);
+                final var savedOrder = trySaveCancelledOrder(command, cancelledOrder);
+                if (savedOrder.isEmpty()) {
+                    yield new CancelOrderResult.Conflict(CONFLICT_REASON);
+                }
                 notificationGateway.notify(new OrderNotification(
                         OrderNotification.Type.ORDER_CANCELLED,
-                        savedOrder.id(),
-                        savedOrder.customerId(),
-                        savedOrder.total()
+                        savedOrder.get().id(),
+                        savedOrder.get().customerId(),
+                        savedOrder.get().total()
                 ));
                 log.info("Order cancelled successfully for orderId={}", command.orderId());
                 yield new CancelOrderResult.Success();
@@ -48,5 +57,17 @@ class CancelOrderUseCaseImpl implements CancelOrderUseCase {
                 yield new CancelOrderResult.Rejected(reason);
             }
         };
+    }
+
+    private Optional<Order> trySaveCancelledOrder(
+            CancelOrderCommand command,
+            Order cancelledOrder
+    ) {
+        try {
+            return Optional.of(orderRepository.save(cancelledOrder));
+        } catch (OptimisticLockingFailureException _) {
+            log.warn("Order cancellation conflicted for orderId={}", command.orderId());
+            return Optional.empty();
+        }
     }
 }

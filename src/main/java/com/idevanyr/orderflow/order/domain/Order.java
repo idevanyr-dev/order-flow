@@ -9,12 +9,18 @@ import java.util.Objects;
 public final class Order {
 
     private final Long id;
+    private final Long version;
     private final String customerId;
     private final List<OrderItem> items;
     private final OrderStatus status;
 
     public Order(Long id, String customerId, List<OrderItem> items, OrderStatus status) {
+        this(id, null, customerId, items, status);
+    }
+
+    public Order(Long id, Long version, String customerId, List<OrderItem> items, OrderStatus status) {
         this.id = id;
+        this.version = version;
         this.customerId = Objects.requireNonNull(customerId, "customerId cannot be null");
         this.items = List.copyOf(items);
         this.status = Objects.requireNonNull(status, "status cannot be null");
@@ -26,6 +32,7 @@ public final class Order {
                 .toList();
 
         return new Order(
+                null,
                 null,
                 command.customerId(),
                 items,
@@ -51,7 +58,7 @@ public final class Order {
         }
 
         return new OrderConfirmation.Success(
-                new Order(id, customerId, items, OrderStatus.CONFIRMED)
+                new Order(id, version, customerId, items, OrderStatus.CONFIRMED)
         );
     }
 
@@ -65,7 +72,7 @@ public final class Order {
         }
 
         return new OrderCancellation.Success(
-                new Order(id, customerId, items, OrderStatus.CANCELLED)
+                new Order(id, version, customerId, items, OrderStatus.CANCELLED)
         );
     }
 
@@ -83,7 +90,7 @@ public final class Order {
         }
 
         return new OrderPayment.Success(
-                new Order(id, customerId, items, OrderStatus.PAID)
+                new Order(id, version, customerId, items, OrderStatus.PAID)
         );
     }
 
@@ -99,6 +106,10 @@ public final class Order {
 
     public String customerId() {
         return customerId;
+    }
+
+    public Long version() {
+        return version;
     }
 
     public List<OrderItem> items() {

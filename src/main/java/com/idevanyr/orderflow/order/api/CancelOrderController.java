@@ -27,6 +27,7 @@ class CancelOrderController {
             case CancelOrderResult.Success _ -> ResponseEntity.noContent().build();
             case CancelOrderResult.NotFound _ -> throw new NotFoundApiException("order not found");
             case CancelOrderResult.Rejected(var reason) -> throw new RejectedApiException(reason);
+            case CancelOrderResult.Conflict(var reason) -> throw new ConflictApiException(reason);
         };
     }
 }

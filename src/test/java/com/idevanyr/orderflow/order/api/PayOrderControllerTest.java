@@ -47,7 +47,7 @@ class PayOrderControllerTest {
                 .thenReturn(new PayOrderResult.Rejected("cancelled order cannot be paid"));
 
         mockMvc.perform(post("/orders/1/payment"))
-                .andExpect(status().is(422))
+                .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.reason").value("cancelled order cannot be paid"));
     }
 
@@ -59,5 +59,15 @@ class PayOrderControllerTest {
         mockMvc.perform(post("/orders/1/payment"))
                 .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.reason").value("payment service is unavailable"));
+    }
+
+    @Test
+    void shouldReturnConflictWhenPaymentCollidesWithConcurrentUpdate() throws Exception {
+        when(payOrderUseCase.execute(any()))
+                .thenReturn(new PayOrderResult.Conflict("order was changed by another request"));
+
+        mockMvc.perform(post("/orders/1/payment"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.reason").value("order was changed by another request"));
     }
 }

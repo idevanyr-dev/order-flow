@@ -5,6 +5,7 @@ import com.idevanyr.orderflow.order.domain.OrderItem;
 import com.idevanyr.orderflow.order.domain.OrderRepository;
 import com.idevanyr.orderflow.order.domain.OrderStatus;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -144,6 +145,32 @@ class PayOrderUseCaseImplTest {
 
         assertInstanceOf(PayOrderResult.Failed.class, result);
         verify(repository, never()).save(any());
+        verify(notificationGateway, never()).notify(any());
+    }
+
+    @Test
+    void shouldReturnConflictWhenOrderWasChangedConcurrently() {
+        var repository = mock(OrderRepository.class);
+        var paymentGateway = mock(PaymentGateway.class);
+        var notificationGateway = mock(NotificationGateway.class);
+        var useCase = new PayOrderUseCaseImpl(repository, paymentGateway, notificationGateway);
+
+        var order = new Order(
+                1L,
+                0L,
+                "C-100",
+                List.of(new OrderItem("P-10", 2, new BigDecimal("49.90"))),
+                OrderStatus.CONFIRMED
+        );
+
+        when(repository.findById(1L)).thenReturn(Optional.of(order));
+        when(paymentGateway.authorize(any()))
+                .thenReturn(new PaymentAuthorizationResult.Authorized());
+        when(repository.save(any(Order.class))).thenThrow(new OptimisticLockingFailureException("stale order"));
+
+        var result = useCase.execute(new PayOrderCommand(1L));
+
+        assertInstanceOf(PayOrderResult.Conflict.class, result);
         verify(notificationGateway, never()).notify(any());
     }
 }

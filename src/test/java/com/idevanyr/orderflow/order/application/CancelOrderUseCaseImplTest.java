@@ -5,6 +5,7 @@ import com.idevanyr.orderflow.order.domain.OrderItem;
 import com.idevanyr.orderflow.order.domain.OrderRepository;
 import com.idevanyr.orderflow.order.domain.OrderStatus;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -80,6 +81,29 @@ class CancelOrderUseCaseImplTest {
 
         assertInstanceOf(CancelOrderResult.Rejected.class, result);
         verify(repository, never()).save(any());
+        verify(notificationGateway, never()).notify(any());
+    }
+
+    @Test
+    void shouldReturnConflictWhenOrderWasChangedConcurrently() {
+        var repository = mock(OrderRepository.class);
+        var notificationGateway = mock(NotificationGateway.class);
+        var useCase = new CancelOrderUseCaseImpl(repository, notificationGateway);
+
+        var order = new Order(
+                1L,
+                0L,
+                "C-100",
+                List.of(new OrderItem("P-10", 2, new BigDecimal("49.90"))),
+                OrderStatus.DRAFT
+        );
+
+        when(repository.findById(1L)).thenReturn(Optional.of(order));
+        when(repository.save(any(Order.class))).thenThrow(new OptimisticLockingFailureException("stale order"));
+
+        var result = useCase.execute(new CancelOrderCommand(1L));
+
+        assertInstanceOf(CancelOrderResult.Conflict.class, result);
         verify(notificationGateway, never()).notify(any());
     }
 }

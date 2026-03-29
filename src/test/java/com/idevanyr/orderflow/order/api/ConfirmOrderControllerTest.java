@@ -47,7 +47,17 @@ class ConfirmOrderControllerTest {
                 .thenReturn(new ConfirmOrderResult.Rejected("order is already confirmed"));
 
         mockMvc.perform(post("/orders/1/confirmation"))
-                .andExpect(status().is(422))
+                .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.reason").value("order is already confirmed"));
+    }
+
+    @Test
+    void shouldReturnConflictWhenConfirmationCollidesWithConcurrentUpdate() throws Exception {
+        when(confirmOrderUseCase.execute(any()))
+                .thenReturn(new ConfirmOrderResult.Conflict("order was changed by another request"));
+
+        mockMvc.perform(post("/orders/1/confirmation"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.reason").value("order was changed by another request"));
     }
 }

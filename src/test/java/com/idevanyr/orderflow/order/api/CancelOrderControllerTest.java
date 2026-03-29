@@ -47,7 +47,17 @@ class CancelOrderControllerTest {
                 .thenReturn(new CancelOrderResult.Rejected("paid order cannot be cancelled"));
 
         mockMvc.perform(post("/orders/1/cancellation"))
-                .andExpect(status().is(422))
+                .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.reason").value("paid order cannot be cancelled"));
+    }
+
+    @Test
+    void shouldReturnConflictWhenCancellationCollidesWithConcurrentUpdate() throws Exception {
+        when(cancelOrderUseCase.execute(any()))
+                .thenReturn(new CancelOrderResult.Conflict("order was changed by another request"));
+
+        mockMvc.perform(post("/orders/1/cancellation"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.reason").value("order was changed by another request"));
     }
 }

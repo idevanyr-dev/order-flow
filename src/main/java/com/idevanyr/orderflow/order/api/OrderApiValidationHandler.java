@@ -43,7 +43,12 @@ class OrderApiValidationHandler {
 
     @ExceptionHandler(RejectedApiException.class)
     ResponseEntity<ReasonResponse> handleRejectedApiException(RejectedApiException exception) {
-        return ResponseEntity.status(422).body(new ReasonResponse(exception.getMessage()));
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(new ReasonResponse(exception.getMessage()));
+    }
+
+    @ExceptionHandler(ConflictApiException.class)
+    ResponseEntity<ReasonResponse> handleConflictApiException(ConflictApiException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ReasonResponse(exception.getMessage()));
     }
 
     @ExceptionHandler(UpstreamFailureApiException.class)

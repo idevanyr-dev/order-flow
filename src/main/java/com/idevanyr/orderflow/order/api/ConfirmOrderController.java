@@ -27,6 +27,7 @@ class ConfirmOrderController {
             case ConfirmOrderResult.Success _ -> ResponseEntity.noContent().build();
             case ConfirmOrderResult.NotFound _ -> throw new NotFoundApiException("order not found");
             case ConfirmOrderResult.Rejected(var reason) -> throw new RejectedApiException(reason);
+            case ConfirmOrderResult.Conflict(var reason) -> throw new ConflictApiException(reason);
         };
     }
 }

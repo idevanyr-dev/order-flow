@@ -27,6 +27,7 @@ class PayOrderController {
             case PayOrderResult.Success _ -> ResponseEntity.noContent().build();
             case PayOrderResult.NotFound _ -> throw new NotFoundApiException("order not found");
             case PayOrderResult.Rejected(var reason) -> throw new RejectedApiException(reason);
+            case PayOrderResult.Conflict(var reason) -> throw new ConflictApiException(reason);
             case PayOrderResult.Failed(var reason) -> throw new UpstreamFailureApiException(reason);
         };
     }

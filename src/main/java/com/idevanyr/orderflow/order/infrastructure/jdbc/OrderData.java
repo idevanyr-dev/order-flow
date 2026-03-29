@@ -1,6 +1,7 @@
 package com.idevanyr.orderflow.order.infrastructure.jdbc;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.MappedCollection;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -12,6 +13,8 @@ public class OrderData {
 
     @Id
     private Long id;
+    @Version
+    private Long version;
     private String customerId;
     private String status;
 
@@ -24,6 +27,14 @@ public class OrderData {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     public String getCustomerId() {

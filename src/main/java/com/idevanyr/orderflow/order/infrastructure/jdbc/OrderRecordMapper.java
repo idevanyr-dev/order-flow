@@ -12,6 +12,7 @@ final class OrderRecordMapper {
     static OrderData toData(Order order) {
         var data = new OrderData();
         data.setId(order.id());
+        data.setVersion(order.version());
         data.setCustomerId(order.customerId());
         data.setStatus(order.status().name());
         data.setItems(order.items().stream()
@@ -33,6 +34,7 @@ final class OrderRecordMapper {
 
         return new Order(
                 data.getId(),
+                data.getVersion(),
                 data.getCustomerId(),
                 items,
                 OrderStatus.valueOf(data.getStatus())
