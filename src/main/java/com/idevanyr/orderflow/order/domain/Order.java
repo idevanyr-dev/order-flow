@@ -51,6 +51,20 @@ public final class Order {
         );
     }
 
+    public OrderCancellation cancel() {
+        if (status == OrderStatus.PAID) {
+            return new OrderCancellation.Rejected("paid order cannot be cancelled");
+        }
+
+        if (status == OrderStatus.CANCELLED) {
+            return new OrderCancellation.Rejected("order is already cancelled");
+        }
+
+        return new OrderCancellation.Success(
+                new Order(id, customerId, items, OrderStatus.CANCELLED)
+        );
+    }
+
     public BigDecimal total() {
         return items.stream()
                 .map(OrderItem::lineTotal)
