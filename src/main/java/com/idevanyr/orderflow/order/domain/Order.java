@@ -33,6 +33,24 @@ public final class Order {
         );
     }
 
+    public OrderConfirmation confirm() {
+        if (items.isEmpty()) {
+            return new OrderConfirmation.Rejected("order without items cannot be confirmed");
+        }
+
+        if (status == OrderStatus.CANCELLED) {
+            return new OrderConfirmation.Rejected("cancelled order cannot be confirmed");
+        }
+
+        if (status == OrderStatus.CONFIRMED) {
+            return new OrderConfirmation.Rejected("order is already confirmed");
+        }
+
+        return new OrderConfirmation.Success(
+                new Order(id, customerId, items, OrderStatus.CONFIRMED)
+        );
+    }
+
     public BigDecimal total() {
         return items.stream()
                 .map(OrderItem::lineTotal)
