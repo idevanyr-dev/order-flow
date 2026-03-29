@@ -2,6 +2,7 @@ package com.idevanyr.orderflow.order.api;
 
 import com.idevanyr.orderflow.order.application.PlaceOrderUseCase;
 import com.idevanyr.orderflow.order.application.PlacedOrderResult;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,7 +20,7 @@ class PlaceOrderController {
     }
 
     @PostMapping
-    ResponseEntity<Object> place(@RequestBody PlaceOrderRequest request) {
+    ResponseEntity<Object> place(@Valid @RequestBody PlaceOrderRequest request) {
         var result = placeOrderUseCase.execute(request.toCommand());
 
         return switch (result) {
