@@ -34,6 +34,8 @@ class OrderQueryControllerTest {
                         1L,
                         "C-100",
                         "PLACED",
+                        new BigDecimal("119.70"),
+                        3,
                         List.of(
                                 new OrderItemView("P-10", 2, new BigDecimal("49.90")),
                                 new OrderItemView("P-20", 1, new BigDecimal("19.90"))
@@ -45,6 +47,8 @@ class OrderQueryControllerTest {
                 .andExpect(jsonPath("$.orderId").value(1))
                 .andExpect(jsonPath("$.customerId").value("C-100"))
                 .andExpect(jsonPath("$.status").value("PLACED"))
+                .andExpect(jsonPath("$.totalAmount").value(119.70))
+                .andExpect(jsonPath("$.totalItemsQuantity").value(3))
                 .andExpect(jsonPath("$.items[0].productCode").value("P-10"))
                 .andExpect(jsonPath("$.items[0].quantity").value(2))
                 .andExpect(jsonPath("$.items[0].unitPrice").value(49.90))

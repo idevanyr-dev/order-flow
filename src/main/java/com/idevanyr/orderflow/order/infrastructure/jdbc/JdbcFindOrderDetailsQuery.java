@@ -20,15 +20,23 @@ class JdbcFindOrderDetailsQuery implements FindOrderDetailsQuery {
     @Override
     public Optional<OrderDetailsView> execute(Long orderId) {
         var header = jdbcClient.sql("""
-                        select id, customer_id, status
-                        from orders
-                        where id = :orderId
+                        select o.id,
+                               o.customer_id,
+                               o.status,
+                               coalesce(sum(oi.quantity * oi.unit_price), 0) as total_amount,
+                               coalesce(sum(oi.quantity), 0) as total_items_quantity
+                        from orders o
+                        left join order_items oi on oi.order_id = o.id
+                        where o.id = :orderId
+                        group by o.id, o.customer_id, o.status
                         """)
                 .param("orderId", orderId)
                 .query((rs, rowNum) -> new OrderHeaderRow(
                         rs.getLong("id"),
                         rs.getString("customer_id"),
-                        rs.getString("status")
+                        rs.getString("status"),
+                        rs.getBigDecimal("total_amount"),
+                        rs.getInt("total_items_quantity")
                 ))
                 .optional();
 
@@ -55,6 +63,8 @@ class JdbcFindOrderDetailsQuery implements FindOrderDetailsQuery {
                 order.id(),
                 order.customerId(),
                 order.status(),
+                order.totalAmount(),
+                order.totalItemsQuantity(),
                 items
         ));
     }
@@ -62,6 +72,8 @@ class JdbcFindOrderDetailsQuery implements FindOrderDetailsQuery {
     private record OrderHeaderRow(
             Long id,
             String customerId,
-            String status
+            String status,
+            java.math.BigDecimal totalAmount,
+            int totalItemsQuantity
     ) {}
 }
